@@ -99,7 +99,23 @@ type output struct {
 	StreamSels []string
 }
 
-func (c *Cmd) AddFileOutput(name string, options []string,
+func (c *Cmd) AddFileOutput(file *os.File, options []string,
+	streams ...Stream) {
+	i := -1
+	for j, f := range c.extraFiles {
+		if file == f {
+			i = j
+			break
+		}
+	}
+	if i == -1 {
+		i = len(c.extraFiles)
+		c.extraFiles = append(c.extraFiles, file)
+	}
+	c.AddOutput("pipe:"+strconv.Itoa(i+3), options, streams...)
+}
+
+func (c *Cmd) AddOutput(name string, options []string,
 	streams ...Stream) {
 	o := output{name, options, make([]string, len(streams))}
 	for i, s := range streams {
@@ -110,7 +126,6 @@ func (c *Cmd) AddFileOutput(name string, options []string,
 		}
 	}
 	c.outputs = append(c.outputs, o)
-	return
 }
 
 func IsInputStream(s Stream) bool {
@@ -182,8 +197,6 @@ Outer:
 	return f
 }
 
-type nopFilter string
-
 func Split(stream Stream) (Stream, Stream) {
 	streams := SplitN(stream, 2)
 	return streams[0], streams[1]
@@ -205,17 +218,16 @@ func ASplitN(stream Stream, n int) []Stream {
 func split(stream Stream, n int, filter string) []Stream {
 	out := make([]Stream, n)
 	for i := range out {
-		out[i] = splitFilter{stream, n, i, filter}
+		out[i] = splitFilter{stream, filter, n, i}
 	}
 	return out
 }
 
 type splitFilter struct {
-	s Stream
-	n int
-	i int
-
+	s      Stream
 	filter string
+	n      int
+	i      int
 }
 
 func (f splitFilter) AddStream(c *Cmd) string {
@@ -226,15 +238,14 @@ func (f splitFilter) AddStream(c *Cmd) string {
 func Concat(v, a int, streams ...Stream) []Stream {
 	out := make([]Stream, len(streams))
 	for i := range out {
-		out[i] = concatFilter{v, a, streams, i}
+		out[i] = concatFilter{streams, v, a, i}
 	}
 	return out
 }
 
 type concatFilter struct {
-	v, a int
-	s    []Stream
-	i    int
+	s       []Stream
+	v, a, i int
 }
 
 func (f concatFilter) AddStream(c *Cmd) string {
