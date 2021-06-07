@@ -76,7 +76,7 @@ func (f InputFile) AddStream(c *Cmd) string {
 		i = len(c.extraFiles)
 		c.extraFiles = append(c.extraFiles, f.File)
 	}
-	return Input{"pipe:" + strconv.Itoa(i+3), f.Options}.AddStream(c)
+	return Input{"/dev/fd/" + strconv.Itoa(i+3), f.Options}.AddStream(c)
 }
 
 type Cmd struct {
@@ -112,7 +112,7 @@ func (c *Cmd) AddFileOutput(file *os.File, options []string,
 		i = len(c.extraFiles)
 		c.extraFiles = append(c.extraFiles, file)
 	}
-	c.AddOutput("pipe:"+strconv.Itoa(i+3), options, streams...)
+	c.AddOutput("/dev/fd/"+strconv.Itoa(i+3), options, streams...)
 }
 
 func (c *Cmd) AddOutput(name string, options []string,
