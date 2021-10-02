@@ -28,6 +28,15 @@ type streamPortion struct {
 func (s streamPortion) AddStream(c *Cmd) string {
 	return s.s.AddStream(c) + ":" + s.streamType
 }
+func Optional(s Stream) Stream { return optionalStream{s} }
+
+type optionalStream struct {
+	s Stream
+}
+
+func (s optionalStream) AddStream(c *Cmd) string {
+	return s.s.AddStream(c) + "?"
+}
 
 type Input struct {
 	Name    string
@@ -133,6 +142,8 @@ func IsInputStream(s Stream) bool {
 	case Input, InputFile:
 		return true
 	case streamPortion:
+		return IsInputStream(s.s)
+	case optionalStream:
 		return IsInputStream(s.s)
 	}
 	return false
