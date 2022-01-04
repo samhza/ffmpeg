@@ -1,3 +1,3 @@
-module go.samhza.com/ffmpeg
+module samhza.com/ffmpeg
 
 go 1.16
